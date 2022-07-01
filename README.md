@@ -12,3 +12,9 @@ npm start
 ```
 npm run package-mac
 ```
+
+![app Image](app.png)
+
+![app Image](success.png)
+
+![app Image](failure.png)
