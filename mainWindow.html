@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IP检测助手</title>
+    <link rel="stylesheet" type="text/css" href="./myown.css">
+    <link rel="stylesheet" type="text/css" href="./node_modules/bulma/css/bulma.min.css">
+    <script src="./node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
+</head>
+<body>
+    <div class="block">
+        <div class="content is-medium">
+            <h2 id="header"> 欢迎使用 </h2>
+        </div>
+    </div>
+
+    <div class="block">
+        <form class="box">
+            <div class="field">
+                <label class="label">VPC 网段 </label>
+
+                <div class="control">
+                <input class="input is-link is-medium is-rounded has-background-light" id = "server" type="text" placeholder="请输入VPC网段">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label"> 客户侧网段 </label>
+                <div class="control">
+                    <input class="input is-link is-medium is-rounded has-background-light" id = "client" type="text" placeholder="请输入客户侧网段">
+                </div>
+            </div>
+            <br>
+            <div class="field is-grouped">
+                <div class="control">
+                    <button type="submit" id = "button1" class="button is-success is-outlined is-medium"> 
+                        提交
+                    </button>
+                </div>
+                <div class="control">
+                    <button id = "button2" class="button is-danger is-outlined is-medium" id = "button2"> 取消 </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="block">
+        <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+            <thead>
+            <tr>
+                <th>VPC IP START</th>
+                <th>VPC IP END</th>
+                <th>CLIENT IP START</th>
+                <th>CLIENT IP END</th>
+            </tr>
+            </thead>
+            <tbody>
+                <tr id="content">
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script type="text/javascript">
+        function convert_to_bin(num){
+            num = parseInt(num);
+            if (num < 0 || num > 255 || num % 1 !== 0) {
+                throw new Error(num + " does not fit in a byte");
+            }
+            return ("000000000" + num.toString(2)).substr(-8)
+        }    
+        function convert_ip_to_binary(ip){
+            ip_array = ip.split('.');
+            var result = new String();
+            for (let i = 0; i < ip_array.length; i++) {
+                let val = convert_to_bin(ip_array[i])
+                result += val;
+            }
+            return result;
+        }
+        function helper(val){
+            return parseInt(val,2).toString();
+        };
+        function func(data){
+            var ip,subnet,binary_ip,res_ip,ip_range_start,ip_range_end;
+            var split_res1,split_res2;
+        
+            ip = data.split('/')[0];
+            subnet = parseInt(data.split('/')[1]);
+            binary_ip = convert_ip_to_binary(ip);
+        
+            res_ip = binary_ip.slice(0, subnet);
+            ip_range_start = res_ip + "0".repeat(32 - subnet);
+            ip_range_end = res_ip + "1".repeat(32 - subnet);
+            
+            split_res1 = ip_range_start.match(/.{1,8}/g);
+            r1 = split_res1.map(helper).join('.')
+        
+            split_res2 = ip_range_end.match(/.{1,8}/g);
+            r2 = split_res2.map(helper).join('.');
+            
+            return {
+                "binary": [ip_range_start,ip_range_end],
+                "decimal": [r1,r2]
+            };
+        };
+        function addNodes(serverRangeArr,clientRangeArr,tr){
+            const vpc_start = document.createElement('td')
+            const vpc_end = document.createElement('td')
+            const client_start = document.createElement('td')
+            const client_end = document.createElement('td')
+            
+            vpc_start.innerText = serverRangeArr[0];
+            vpc_start.id = 'vpc_start';
+
+            vpc_end.innerText = serverRangeArr[1];
+            vpc_end.id = 'vpc_end';
+
+            client_start.innerText = clientRangeArr[0];
+            client_start.id = 'client_start';
+
+            client_end.innerText = clientRangeArr[1];
+            client_end.id = 'client_end';
+
+            tr.appendChild(vpc_start);
+            tr.appendChild(vpc_end);
+            tr.appendChild(client_start);
+            tr.appendChild(client_end);
+
+            return tr;
+        }
+        function updateNodes(serverRangeArr,clientRangeArr){
+            document.querySelector('#vpc_start').innerText = serverRangeArr[0];
+            document.querySelector('#vpc_end').innerText = serverRangeArr[1];
+            document.querySelector('#client_start').innerText = clientRangeArr[0];
+            document.querySelector('#client_end').innerText = clientRangeArr[1];
+        }
+        function checkNodes(s_arr,c_arr){
+            var vpc_start = document.querySelector('#vpc_start');
+            var vpc_end = document.querySelector('#vpc_end');
+            var client_start = document.querySelector('#client_start');
+            var client_end = document.querySelector('#client_end');
+            
+            var result = new Boolean();
+
+            console.log(vpc_start,client_start);
+
+            if (c_arr[0] <= s_arr[1] && s_arr[0] <= c_arr[1]) {
+                // fail 
+                vpc_start.className = 'has-background-danger-light has-text-danger-dark';
+                vpc_end.className = 'has-background-danger-light has-text-danger-dark';
+                client_start.className = 'has-background-danger-dark has-text-white';
+                client_end.className = 'has-background-danger-dark has-text-white';
+                result = false;
+            }  else {
+                vpc_start.className = 'has-background-primary-light has-text-dark';
+                vpc_end.className = 'has-background-primary-light has-text-dark';
+                client_start.className = 'has-background-primary-dark has-text-white';
+                client_end.className = 'has-background-primary-dark has-text-white';
+                result = true;
+            }
+
+
+            if (result) {
+                Swal.fire({
+                    title: 'IP地址不冲突',
+                    showConfirmButton: true,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                  }) 
+            } else {
+                Swal.fire({
+                    title: 'IP地址冲突',
+                    showDenyButton: true,
+                    showConfirmButton: false,
+                    text: "请修改您的IP地址",
+                    icon: 'error',
+                    denyButtonText: '退出'
+                  }) 
+            }
+
+
+            
+        }
+
+        let ipcRenderer = require('electron').ipcRenderer;
+        const Swal = require('sweetalert2');
+
+        const button = document.querySelector('#button1');
+        var tr = document.querySelector("#content");
+        var serverRangeArr;
+        var clientRangeArr;
+        var serverRangeArrBinary;
+        var clientRangeArrBinary;
+
+        button.addEventListener('click', function(e){
+            e.preventDefault();
+            const server = document.querySelector('#server').value;
+            const client = document.querySelector('#client').value;
+            
+            ipcRenderer.send('button:click', {
+                server: server,
+                client: client
+            });});
+
+        ipcRenderer.on('main-reply-to-render',(event,arg) => {
+            console.log("reply message: ", arg);
+
+            serverRangeArr = func(arg['server'])['decimal'];
+            serverRangeArrBinary = func(arg['server'])['binary'];
+            clientRangeArr = func(arg['client'])['decimal'];
+            clientRangeArrBinary = func(arg['client'])['binary'];
+
+            //console.log(tr.children.length);
+
+            if (tr.children.length == 0) { // add nodes
+                tr = addNodes(serverRangeArr, clientRangeArr,tr);
+            }
+            else { // change nodes
+                updateNodes(serverRangeArr, clientRangeArr);
+            };
+
+            checkNodes(serverRangeArrBinary, clientRangeArrBinary);
+            
+           
+        });
+
+
+
+
+            
+
+    </script>
+</body>
+</html>

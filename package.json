@@ -1,0 +1,25 @@
+{
+  "name": "IP检测助手",
+  "version": "1.0.0",
+  "description": "ipconflict checker",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package-mac": "electron-packager . --overwrite --platform=darwin --arch=x64 --icon=assets/icons/mac/icon1.icns --prune=true --out=Non-Installer-Builds",
+    "package-mac-installer": "electron-installer-dmg ./Non-Installer-Builds/IP检测助手-darwin-x64/IP检测助手.app IP检测助手 --out=Installer-Builds/mac --overwrite --icon=assets/icons/mac/icon1.icns",
+    "package-win32": "electron-packager . IP检测助手 --overwrite --asar=true --platform=win32 --arch=ia32 --icon=assets/icons/win/icon1.ico --prune=true --out=Non-Installer-Builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"IP检测助手\"",
+    "package-win64": "electron-packager . IP检测助手 --overwrite --asar=true --platform=win32 --arch=x64 --icon=assets/icons/win/icon1.ico --prune=true --out=Non-Installer-Builds --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"IP检测助手\""
+  },
+  "author": "Anyang Li",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^19.0.6",
+    "electron-installer-dmg": "^4.0.0",
+    "electron-packager": "^15.5.1",
+    "electron-winstaller": "^5.0.0"
+  },
+  "dependencies": {
+    "bulma": "^0.9.4",
+    "sweetalert2": "^11.4.19"
+  }
+}

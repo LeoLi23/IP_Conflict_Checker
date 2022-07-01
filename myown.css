@@ -1,0 +1,24 @@
+@font-face {
+    font-family: myFont;
+    src: url(./font_package/font.ttf);
+}
+
+* {
+    font-family: myFont;
+}
+
+.input {
+    font-family: myFont;
+}
+
+.content h2 {
+    text-align: center;
+}
+
+.field.is-grouped {
+    display: flex;
+    justify-content: flex-start;
+    margin-left:auto;
+    margin-right:auto;
+    width: 22%;
+}
